@@ -1,6 +1,6 @@
 import express, { Application } from "express";
 import { startDatabase } from "./database";
-import { getAllMovies, getMoviesById, postMovies } from "./logic";
+import { deleteMoviesById, getAllMovies, getMoviesById, postMovies, updateMoviesById } from "./logic";
 import { checkExistsId, checkingDuplicateNames } from "./middlewares";
 
 const app:Application = express()
@@ -13,9 +13,9 @@ app.get('/movies',checkingDuplicateNames,getAllMovies)
 
 app.get('/movies/:id',checkExistsId,getMoviesById)
 
-app.patch('/movies/:id',checkExistsId,)
+app.patch('/movies/:id',checkExistsId,checkingDuplicateNames,updateMoviesById)
 
-app.delete('/movies/:id',checkExistsId,)
+app.delete('/movies/:id',checkExistsId,deleteMoviesById)
 
 
 app.listen(3000,async () => {

@@ -55,19 +55,18 @@ const checkExistsId = async (
 
    const queryConfig: QueryConfig = {
       text: queryString,
-      values: [id]
+      values: [id],
    };
 
    const queryResult: QueryResult<Imovies> = await client.query(queryConfig);
 
-   res.locals.MovieById = queryResult.rows[0]
+   res.locals.MovieById = queryResult.rows[0];
 
    if (queryResult.rowCount == 0) {
       return res.status(404).json({ error: "Movie not found!" });
    }
 
    return next();
-
 };
 
 export { checkingDuplicateNames, checkExistsId };

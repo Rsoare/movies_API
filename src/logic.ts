@@ -1,12 +1,13 @@
-import { Request, Response, response } from "express";
+import { Request, Response } from "express";
 import { Imovies, ImoviesResquest } from "./interfaces";
 import { QueryConfig, QueryResult } from "pg";
 import { client } from "./database";
+import format from "pg-format";
 
 const postMovies = async (
-   req: Request,
-   res: Response
-   ): Promise<Response> => {
+   req: Request, 
+   res: Response): 
+   Promise<Response> => {
 
    const moviesData: ImoviesResquest = req.body;
 
@@ -33,56 +34,128 @@ const postMovies = async (
 };
 
 
+
 const getAllMovies = async (
-   req:Request,
-   res:Response
-   ):Promise<Response> =>{
+   req: Request,
+   res: Response): 
+   Promise<Response> => {
 
-      const movies:Imovies = res.locals.listMovies
+   const category: any = req.query;
 
-   return res.json(movies)
-}
+   const queryParamValues: any[] = Object.values(category);
+   const queryParamKeys: any[] = Object.keys(category);
 
-const getMoviesById = async (
-   req:Request,
-   res:Response
-):Promise<Response> =>{
+   const movies: Imovies = res.locals.listMovies;
 
-   const movie:Imovies = res.locals.MovieById
-
-   return res.json(movie)
-
-}
-
-const updateMoviesById = async (
-   req:Request,
-   res:Response
-):Promise<Response> => {
-
-   const moviesData:ImoviesResquest = req.body
-
-   const id: number = parseInt(req.params.id) 
-
-   const queryString:string = `
-   UPDADE 
-      movies
+   if (queryParamValues.length !== 0) {
+      const queryString: string = format(
+         `
    
-   SET
-      () = ROW()
+         SELECT
+            *
+   
+         FROM
+            movies
+   
+         WHERE
+         %I = %L
+   
+         `,
+         queryParamKeys,
+         queryParamValues
+      );
 
-   WHERE id = $1;
+      const queryResult: QueryResult = await client.query(queryString);
 
-   `
+      if (queryResult.rows.length == 0) {
+         return res.json(movies);
+      }
 
-   const queryConfig:QueryConfig ={
-      text:queryString,
-      values:[id]
+      return res.json(queryResult.rows);
    }
 
-   const queryResult:QueryResult<Imovies> = await client.query(queryConfig)
-
-   return res.status(201).json(queryResult)
-}
+   return res.json(movies);
+};
 
 
-export { postMovies,getAllMovies,getMoviesById };
+
+const getMoviesById = async (
+   req: Request,
+   res: Response
+): Promise<Response> => {
+   const movie: Imovies = res.locals.MovieById;
+
+   return res.json(movie);
+};
+
+
+
+const updateMoviesById = async (
+   req: Request,
+   res: Response
+): Promise<Response> => {
+   const moviesData: Partial<ImoviesResquest> = req.body;
+
+   const id: number = parseInt(req.params.id);
+
+   const queryString: string = format(
+      `
+
+      UPDATE 
+         movies
+         SET(%I) = ROW(%L)
+
+      WHERE 
+         id = $1
+
+      RETURNING *;
+
+      `,
+      Object.keys(moviesData),
+      Object.values(moviesData)
+   );
+
+   const queryConfig: QueryConfig = {
+      text: queryString,
+      values: [id],
+   };
+
+   const queryResult: QueryResult<Imovies> = await client.query(queryConfig);
+
+   return res.json(queryResult.rows[0]);
+};
+
+
+
+const deleteMoviesById = async (
+   req: Request,
+   res: Response
+): Promise<Response> => {
+   const id: number = parseInt(req.params.id);
+
+   const queryString: string = `
+
+   DELETE FROM 
+      movies
+   
+   WHERE
+      id = $1
+
+   `;
+
+   const queryConfig: QueryConfig = {
+      text: queryString,
+      values: [id],
+   };
+
+   await client.query(queryConfig);
+
+   return res.status(204).send();
+};
+export {
+   postMovies,
+   getAllMovies,
+   getMoviesById,
+   updateMoviesById,
+   deleteMoviesById,
+};
