@@ -23,7 +23,7 @@ const checkingDuplicateNames = async (
 
    res.locals.listMovies = queryResult.rows;
 
-   const filterMovies = queryResult.rows.find((movie) => movie.name == name);
+   const filterMovies:Imovies | undefined = queryResult.rows.find((movie) => movie.name == name);
 
    if (filterMovies) {
       return res.status(409).json({
