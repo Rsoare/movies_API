@@ -42,8 +42,8 @@ const getAllMovies = async (
 
    const category: any = req.query;
 
-   const queryParamValues: any[] = Object.values(category);
-   const queryParamKeys: any[] = Object.keys(category);
+   const queryParamValues = Object.values(category);
+   const queryParamKeys = Object.keys(category);
 
    const movies: Imovies = res.locals.listMovies;
 
